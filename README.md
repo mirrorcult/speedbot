@@ -12,6 +12,8 @@ Then create a file called `config.py` in the `src` directory with contents like 
 BOT_TOKEN = "{your token here}"
 ```
 
+You also probably wanna change the channel IDs in src/main.py to match up with whatever you're doing, I guess? I don't know who else would use this besides our discord, though.
+
 Then run these commands (assuming python3 is installed):
 
 ```sh
