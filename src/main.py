@@ -1,6 +1,7 @@
 import asyncio
 import math
 import discord
+import random
 from discord.ext import commands
 import logging.config
 
@@ -12,7 +13,15 @@ if 1 == 1:
     GENERAL_ID = 688951042498363415
 else:
     GENERAL_ID = 465058736608641049 # testing pruposes
-STATUS = "failing at 50 HSG"
+
+STATUSES = [
+    "failing at 50 HSG",
+    "resetting on 1",
+    "dying on 47",
+    "turning particles off",
+    "Wallkicks will Work",
+    "using sorcery to skip 45"
+]
 
 speedbot = commands.Bot(command_prefix='.')
 api = ApiHandler()
@@ -34,18 +43,23 @@ def format_time(secs):
 def create_embed(run_id):
     """Creates a discord.py embed using a given run's ID"""
     run = api.get_run_data(run_id)
-    verifier = api.get_user_data(run["status"]["examiner"])["names"]["international"]
-    player = api.get_user_data(run["players"][0]["id"])["names"]["international"]
+    verifier_name = api.get_user_data(run["status"]["examiner"])["names"]["international"]
+    player = api.get_user_data(run["players"][0]["id"])
+    player_name = player["names"]["international"]
 
-    # lol ordinals stolen from SO
+    # lol ordinals stolen from stackoverflow
     suf = lambda n: "%d%s"%(n,{1:"st",2:"nd",3:"rd"}.get(n if n<20 else n%10,"th"))
     place = api.get_place_from_run_id(run_id, run["category"])
     time = format_time(run["times"]["ingame_t"])
+    
+    country = player["location"]["country"]["code"]
+    flag = f":flag_{country}:" # discord emote
+
     if "videos" in run:
         link = run["videos"]["links"][0]["uri"]
 
     embed = discord.Embed(
-        title = f'{player} | {suf(place)}',
+        title = f'{player_name} {flag} | {suf(place)}',
         description = run["comment"],
         colour = discord.Colour.purple(),
     )
@@ -53,14 +67,14 @@ def create_embed(run_id):
     if int(place) <= 4:
         embed.set_thumbnail(url=f"https://www.speedrun.com/themes/gur1/{suf(place)}.png")
 
-    embed.set_footer(text=f'Submitted on {run["date"]}, verified by {verifier}')
+    embed.set_footer(text=f'Submitted on {run["date"]}, verified by {verifier_name}')
     embed.add_field(name='Time', value=time, inline=False)
     if link:
         embed.add_field(name='Link', value=link, inline=False)
     else:
-        log.debug(f"No video link for run {run} by {player} found!")
+        log.debug(f"No video link for run {run} by {player_name} found!")
 
-    log.debug(f"Created embed for run by {player} in {time}")
+    log.debug(f"Created embed for run by {player_name} in {time}")
     return embed
 
 @speedbot.command()
@@ -105,9 +119,14 @@ async def newest(ctx):
     embed = create_embed(run_id)
     await ctx.send(embed=embed)
 
-@speedbot.event
-async def on_ready():
-    await speedbot.change_presence(activity=discord.Game(name=STATUS))
+async def change_presence():
+    """Randomizes Speedbot's presence to somethin funny I guess."""
+    while not speedbot.is_closed():
+        choice = random.choice(STATUSES)
+        log.debug(f"Chose status '{choice}'!")
+        activity = discord.Game(choice)
+        await speedbot.change_presence(activity=activity)
+        await asyncio.sleep(60 * 20)
 
 async def new_run_alert():
     """Runs every 5 minutes. Will check if there has been a new run verified. If so,
@@ -127,4 +146,5 @@ async def new_run_alert():
 
 if __name__ == "__main__":
     speedbot.loop.create_task(new_run_alert())
+    speedbot.loop.create_task(change_presence())
     speedbot.run(BOT_TOKEN)
