@@ -40,6 +40,11 @@ def format_time(secs):
     else:
         return f"{mins}:{lsecs}.{ms}"
 
+def hex_to_rgb(h):
+    h = h.lstrip('#')
+    return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+
+
 def create_embed(run_id):
     """Creates a discord.py embed using a given run's ID"""
     run = api.get_run_data(run_id)
@@ -54,6 +59,7 @@ def create_embed(run_id):
     
     country = player["location"]["country"]["code"]
     flag = f":flag_{country}:" # discord emote
+    colour = hex_to_rgb(player["name-style"]["color-from"]["dark"])
 
     if "videos" in run:
         link = run["videos"]["links"][0]["uri"]
@@ -61,7 +67,7 @@ def create_embed(run_id):
     embed = discord.Embed(
         title = f'{player_name} {flag} | {suf(place)}',
         description = run["comment"],
-        colour = discord.Colour.purple(),
+        colour = discord.Colour.from_rgb(colour[0], colour[1], colour[2]), # unsure if this needs to be done
     )
 
     if int(place) <= 4:
@@ -74,7 +80,7 @@ def create_embed(run_id):
     else:
         log.debug(f"No video link for run {run} by {player_name} found!")
 
-    log.debug(f"Created embed for run by {player_name} in {time}")
+    log.debug(f"Created embed for run by {player_name} in {time}, with color {colour}")
     return embed
 
 @speedbot.command()
@@ -115,7 +121,7 @@ async def newest(ctx):
         log.warning("Tried to post newest run before initializing finished!")
         return
 
-    log.info("Posted newest run after being asked")
+    log.info("Posting newest run after being asked!")
     embed = create_embed(run_id)
     await ctx.send(embed=embed)
 
@@ -123,7 +129,7 @@ async def change_presence():
     """Randomizes Speedbot's presence to somethin funny I guess."""
     while not speedbot.is_closed():
         choice = random.choice(STATUSES)
-        log.debug(f"Chose status '{choice}'!")
+        log.info(f"Chose status '{choice}'!")
         activity = discord.Game(choice)
         await speedbot.change_presence(activity=activity)
         await asyncio.sleep(60 * 20)
@@ -136,7 +142,7 @@ async def new_run_alert():
     channel = speedbot.get_channel(GENERAL_ID)
     while not speedbot.is_closed():
         if api.check_for_new_run():
-            log.info("Posted newest run automatically!")
+            log.info("Posting newest run automatically!")
             await channel.send(f'**A new run has been verified!**')
             embed = create_embed(api.newest_cached)
             await channel.send(embed=embed)

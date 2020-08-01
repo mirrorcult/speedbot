@@ -37,7 +37,7 @@ class ApiHandler():
         for r in board["runs"]:
             if r["run"]["id"] == run_id:
                 place = r["place"]
-                log.debug(f"Run {run_id} in {category} has place {place}")
+                log.debug(f"Run {run_id} in category {category} has place {place}")
                 return place
         return 0 # this could not possibly happen, right?
 
@@ -64,5 +64,5 @@ class ApiHandler():
         return False
 
     def get_top_run_ids(self, category, n=10):
-        """Returns the top 'n' runs in the given category in a list."""
+        """Returns the top 'n' run's IDs in the given category"""
         pass
