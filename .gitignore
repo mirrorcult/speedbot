@@ -1,3 +1,10 @@
+# python
 src/__pycache__
 src/config.py
-.vscode
+
+# pyinstaller
+dist/
+nohup.out
+
+# ide stuff
+.vscode/
