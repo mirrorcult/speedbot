@@ -20,7 +20,7 @@ Run these commands (assuming python3 and pip are installed and in your system PA
 
 ```sh
 pip3 install -r requirements.txt
-python src/tests.py
+coverage run src/tests.py
 ```
 
 If all the tests pass, you're good to run this command:

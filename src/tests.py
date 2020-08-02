@@ -27,6 +27,9 @@ class TestApiHandler(unittest.TestCase):
     def test_check_for_new_run(self):
         lb = ApiHandler()
         self.assertFalse(lb.check_for_new_run()) # first call always is false since its checking against nothing
+        
+        lb.newest_cached = "mock"
+        self.assertTrue(lb.check_for_new_run()) # newest_cached and the run found shouldn't be equal now that I've changed it
     
     def test_get_top_run_ids(self):
         lb = ApiHandler()
