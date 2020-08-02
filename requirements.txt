@@ -1,2 +1,4 @@
 srcomapi
 discord.py
+flake8
+coverage

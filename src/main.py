@@ -41,9 +41,9 @@ def format_time(secs):
         return f"{mins}:{lsecs}.{ms}"
 
 def hex_to_rgb(h):
+    """Converts a hexcode like `#FABD12` to an RGB triple."""
     h = h.lstrip('#')
     return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
-
 
 def create_embed(run_id):
     """Creates a discord.py embed using a given run's ID"""
@@ -58,7 +58,7 @@ def create_embed(run_id):
     time = format_time(run["times"]["ingame_t"])
     
     country = player["location"]["country"]["code"]
-    flag = f":flag_{country}:" # discord emote
+    flag = f":flag_{country}:" # discord emote. doesn't work for some flags, like wales or quebec since they're provinces (sorta)
     colour = hex_to_rgb(player["name-style"]["color-from"]["dark"])
 
     if "videos" in run:
