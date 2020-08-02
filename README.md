@@ -1,5 +1,7 @@
 # Speedbot
 
+![Python application](https://github.com/cyclowns/speedbot/workflows/Python%20application/badge.svg) ![codecov](https://codecov.io/gh/cyclowns/speedbot/branch/master/graph/badge.svg)
+
 Basic discord bot utilizing the SRC API for the GUR speedrunning discord. In the future, this will be generalized to any SRC game
 
 ## Running
