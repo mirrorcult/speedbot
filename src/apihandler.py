@@ -22,7 +22,7 @@ class ApiHandler():
         self.api.debug = 1
 
     def get_run_id(self, category, name):
-        """Retrieves a Give Up Robot SRC (PB) run's ID in the given category by the given username."""
+        """Retrieves a Give Up Robot SRC (PB) run's ID in the given category name by the given username."""
         pbs = self.api.get(f"users/{name}/personal-bests?embed=game,category")
         for r in pbs:
             if r["game"]["data"]["id"] == GUR_GAME_ID and r["category"]["data"]["id"] == CATEGORIES[category]:
@@ -31,7 +31,7 @@ class ApiHandler():
         return None
 
     def get_place_from_run_id(self, run_id, category):
-        """Returns a run's place given it's ID and category"""
+        """Returns a run's place given it's ID and category ID"""
         # This shouldn't be this hard. Why is place just not included with runs??
         board = self.api.get(f"leaderboards/{GUR_GAME_ID}/category/{category}")
         for r in board["runs"]:
