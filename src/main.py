@@ -7,6 +7,7 @@ import logging.config
 
 from config import BOT_TOKEN
 from logger import DEFAULT_CONFIG
+from run import Run
 from apihandler import ApiHandler
 
 if 1 == 1:
@@ -28,59 +29,66 @@ api = ApiHandler()
 logging.config.dictConfig(DEFAULT_CONFIG)
 log = logging.getLogger("bot")
 
-def format_time(secs):
-    """Yes, I know strftime exists. It did not work."""
-    mins = (int(secs / 60))
-    lsecs = int(secs % 60)
-    ms = round((secs - int(secs)) * 1000)
-    if ms < 10:
-        ms *= 10
-    if lsecs < 10:
-        return f"{mins}:0{lsecs}.{ms}"
-    else:
-        return f"{mins}:{lsecs}.{ms}"
-
-def hex_to_rgb(h):
-    """Converts a hexcode like `#FABD12` to an RGB triple."""
-    h = h.lstrip('#')
-    return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+def suf(n):
+    """Returns an ordinal suffix like 'st', 'rd', 'th' depending on n"""
+    return "%d%s"%(n,{1:"st",2:"nd",3:"rd"}.get(n if n<20 else n%10,"th"))
 
 def create_embed(run_id):
     """Creates a discord.py embed using a given run's ID"""
-    run = api.get_run_data(run_id)
-    verifier_name = api.get_user_data(run["status"]["examiner"])["names"]["international"]
-    player = api.get_user_data(run["players"][0]["id"])
-    player_name = player["names"]["international"]
+    run = api.get_run(run_id)
+    verifier_name = api.get_player(run.get_verifier()).get_name()
+    player = api.get_player(run.get_runner_id())
+    player_name = player.get_name()
 
-    # lol ordinals stolen from stackoverflow
-    suf = lambda n: "%d%s"%(n,{1:"st",2:"nd",3:"rd"}.get(n if n<20 else n%10,"th"))
-    place = api.get_place_from_run_id(run_id, run["category"])
-    time = format_time(run["times"]["ingame_t"])
+    place = api.get_place_from_run_id(run_id, run.get_category())
+    time = run.get_igt_formatted()
     
-    country = player["location"]["country"]["code"]
-    flag = f":flag_{country}:" # discord emote. doesn't work for some flags, like wales or quebec since they're provinces (sorta)
-    colour = hex_to_rgb(player["name-style"]["color-from"]["dark"])
-
-    if "videos" in run:
-        link = run["videos"]["links"][0]["uri"]
+    flag = player.get_flag()
+    colour = player.get_colour()
+    link = run.get_link()
+    date = run.get_date()
 
     embed = discord.Embed(
-        title = f'{player_name} {flag} | {suf(place)}',
-        description = run["comment"],
+        title = f"{player_name} {flag} | {suf(place)}",
+        description = run.get_comment(),
         colour = discord.Colour.from_rgb(colour[0], colour[1], colour[2]), # unsure if this needs to be done
     )
 
     if int(place) <= 4:
         embed.set_thumbnail(url=f"https://www.speedrun.com/themes/gur1/{suf(place)}.png")
 
-    embed.set_footer(text=f'Submitted on {run["date"]}, verified by {verifier_name}')
+    embed.set_footer(text=f'Submitted on {date}, verified by {verifier_name}')
     embed.add_field(name='Time', value=time, inline=False)
-    if link:
-        embed.add_field(name='Link', value=link, inline=False)
-    else:
-        log.debug(f"No video link for run {run} by {player_name} found!")
+    embed.add_field(name='Link', value=link, inline=False)
 
-    log.debug(f"Created embed for run by {player_name} in {time}, with color {colour}")
+    log.info(f"Created embed for run by {player_name} in {time}, with color {colour}")
+    return embed
+
+def create_top_run_embed(category_name, n):
+    """Creates an embed containing the top n runs in the given category."""
+    runs = api.get_leaderboard_data(category_name)["runs"]
+    n = n if len(runs) > n else len(runs)
+
+    embed = discord.Embed(
+        title = f":medal: - Top {n} {category_name} runs",
+        colour = discord.Colour.blue()
+    )
+
+    for x in range(n):
+        run = Run(runs[x]["run"]) # run
+
+        player = api.get_player(run.get_runner_id())
+        player_name = player.get_name()
+        flag = player.get_flag()
+        time = run.get_igt_formatted()
+        link = run.get_link()
+
+        embed.add_field(
+            name=f"{suf(x + 1)} | {flag} {player_name} | {time}",
+            value=link,
+            inline=False
+        )
+    
     return embed
 
 @speedbot.command()
@@ -89,28 +97,24 @@ async def run(ctx, category, name):
     run = api.get_run_id(category, name)
     if not run:
         log.warning(f"Could not find run for {name} in {category}!")
-        await ctx.send(f'No run for `{name}` in category `{category}` found!')
+        await ctx.send(f"No run for `{name}` in category `{category}` found! Either they aren't on the leaderboards or are a guest user.")
         return
     
-    log.info(f"Posted run by {name} in {category} after being asked")
+    log.info(f"Posting run by {name} in {category} after being asked")
     embed = create_embed(run)
     await ctx.send(embed=embed)
 
 @speedbot.command()
 async def top(ctx, category, n=10):
     """Returns info about the top n runs in a category."""
-    if n > 20 and n > 1:
+    if n > 20 or n < 1:
         log.warning(f"User tried to return top {n} logs, out of range!")
         await ctx.send(f'Number of runs must be <= 20 and > 1!')
         return
 
-    # runs = api.get_top_runs(category, n)
-
-    log.info(f"Posted top runs to {n} after being asked")
-    embed = discord.Embed(
-        title = f'Top Runs in **{category}**',
-        colour = discord.Colour.purple()
-    )
+    log.info(f"Posting top {n} runs in {category} after being asked")
+    embed = create_top_run_embed(category, n)
+    await ctx.send(embed=embed)
 
 @speedbot.command()
 async def newest(ctx):
@@ -147,7 +151,7 @@ async def new_run_alert():
             embed = create_embed(api.newest_cached)
             await channel.send(embed=embed)
         else:
-            log.debug("No new runs found.")
+            log.info("No new runs found.")
         await asyncio.sleep(60 * 5)
 
 if __name__ == "__main__":

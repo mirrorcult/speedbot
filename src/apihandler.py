@@ -2,6 +2,8 @@ import srcomapi
 import logging.config
 
 from logger import DEFAULT_CONFIG
+from player import Player
+from run import Run
 
 GUR_GAME_ID = "j1l7ojdg"
 CATEGORIES = {
@@ -23,12 +25,14 @@ class ApiHandler():
 
     def get_run_id(self, category, name):
         """Retrieves a Give Up Robot SRC (PB) run's ID in the given category name by the given username."""
-        pbs = self.api.get(f"users/{name}/personal-bests?embed=game,category")
-        for r in pbs:
-            if r["game"]["data"]["id"] == GUR_GAME_ID and r["category"]["data"]["id"] == CATEGORIES[category]:
-                log.debug(f"Found run in {category} by {name}!")
-                return r["run"]["id"]  # done for compatibility reasons and also butt
-        return None
+        try:
+            pbs = self.api.get(f"users/{name}/personal-bests?embed=game,category")
+            for r in pbs:
+                if r["game"]["data"]["id"] == GUR_GAME_ID and r["category"]["data"]["id"] == CATEGORIES[category]:
+                    log.info(f"Found run in {category} by {name}!")
+                    return r["run"]["id"]  # done for compatibility reasons and also butt
+        except:
+            return None
 
     def get_place_from_run_id(self, run_id, category):
         """Returns a run's place given it's ID and category ID"""
@@ -41,15 +45,26 @@ class ApiHandler():
                 return place
         return 0 # this could not possibly happen, right?
 
-    def get_user_data(self, user):
-        """Get a user's data based on their name."""
-        log.debug(f"Returning info for user {user}")
-        return self.api.get(f"users/{user}")
+    def get_player(self, user):
+        """Get a user's data as a Player class based on their name, or nothing if they're a guest."""
+        try:
+            p_data = self.api.get(f"users/{user}")
+            log.info(f"Returning info for normal user {user}")
+            return Player(p_data)
+        except:
+            log.info(f"Returning info for guest user {user}")
+            return Player(None, guest_name=user)
 
-    def get_run_data(self, run):
-        """Returns a run's data based on its ID."""
-        log.debug(f"Returning info for run {run}")
-        return self.api.get(f"runs/{run}")
+    def get_run(self, run):
+        """Returns a run's data as a Run class based on its ID."""
+        log.info(f"Returning info for run {run}")
+        return Run(self.api.get(f"runs/{run}"))
+    
+    def get_leaderboard_data(self, category_name):
+        """Gets a category's leaderboard data based on its name."""
+        cat_id = CATEGORIES[category_name]
+        log.info(f"Returning info for leaderboard {category_name}")
+        return self.api.get(f"leaderboards/{GUR_GAME_ID}/category/{cat_id}")
 
     def check_for_new_run(self):
         """Checks if a run newer than the one cached has been created.
@@ -62,7 +77,3 @@ class ApiHandler():
             return True
         self.newest_cached = newest_id
         return False
-
-    def get_top_run_ids(self, category, n=10):
-        """Returns the top 'n' run's IDs in the given category"""
-        pass

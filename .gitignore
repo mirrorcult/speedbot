@@ -1,8 +1,11 @@
 # python
 src/__pycache__
 src/config.py
+
+# coverage
 .coverage
 coverage.xml
+htmlcov
 
 # pyinstaller
 dist/

@@ -9,7 +9,7 @@ DEFAULT_CONFIG = {
     },
     'handlers': { 
         'console': { 
-            'level': 'DEBUG',
+            'level': 'INFO',
             'formatter': 'standard',
             'class': 'logging.StreamHandler',
             'stream': 'ext://sys.stdout',
@@ -31,5 +31,15 @@ DEFAULT_CONFIG = {
             'level': 'DEBUG',
             'propagate': False
         },
+        'run': {
+            'handlers': ['console'],
+            'level': 'DEBUG', # a little less important
+            'propagate': False, 
+        },
+        'player': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        }
     } 
 }
