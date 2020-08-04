@@ -38,6 +38,10 @@ class Run:
             log.debug("No ID found, returning guest name")
             return self.data["players"][0]["name"]
     
+    def get_game(self):
+        log.debug("Returning game")
+        return self.data["game"]
+
     def get_category(self):
         log.debug("Returning category")
         return self.data["category"]
