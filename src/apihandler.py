@@ -73,7 +73,7 @@ class ApiHandler():
 
     def check_for_new_run(self):
         """Checks if a run newer than the one cached has been created.
-           If one has, then set self.newest_cached to be equal to its ID, 
+           If one has, then set self.newest_cached to be equal to its ID,
            and return true."""
         # A very.. special query
         newest_id = self.api.get(f"runs?status=verified&game={GUR_GAME_ID}&orderby=verify-date&direction=desc&embed=category")[0]["id"]

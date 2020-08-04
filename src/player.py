@@ -35,6 +35,8 @@ class Player:
         return hex_to_rgb(self.data["name-style"]["color-from"]["dark"])
 
     def get_flag(self):
+        """Returns a text string formatted as a discord emoji
+        corresponding to the player's country's flag."""
         if self.guest_name or self.data["location"] is None:
             log.debug("No flag found!")
             return ""

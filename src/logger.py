@@ -14,30 +14,36 @@ DEFAULT_CONFIG = {
             "class": "logging.StreamHandler",
             "stream": "ext://sys.stdout",
         },
+        "file": {
+            "level": "DEBUG",
+            "formatter": "standard",
+            "class": "logging.FileHandler",
+            "filename": "speedbot.log",
+        }
     },
     "loggers": {
         "": {  # root logger
-            "handlers": ["console"],
+            "handlers": ["console", "file"],
             "level": "WARNING",
             "propagate": False
         },
         "bot": {
-            "handlers": ["console"],
+            "handlers": ["console", "file"],
             "level": "DEBUG",
             "propagate": False
         },
         "apihandler": {
-            "handlers": ["console"],
+            "handlers": ["console", "file"],
             "level": "DEBUG",
             "propagate": False
         },
         "run": {
-            "handlers": ["console"],
+            "handlers": ["console", "file"],
             "level": "DEBUG",  # a little less important
             "propagate": False,
         },
         "player": {
-            "handlers": ["console"],
+            "handlers": ["console", "file"],
             "level": "DEBUG",
             "propagate": False,
         }

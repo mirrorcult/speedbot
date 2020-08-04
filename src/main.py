@@ -141,6 +141,7 @@ async def newest(ctx):
 
 async def change_presence():
     """Randomizes Speedbot's presence to somethin funny I guess."""
+    await speedbot.wait_until_ready()
     while not speedbot.is_closed():
         choice = random.choice(STATUSES)
         log.info(f"Chose status '{choice}'!")
