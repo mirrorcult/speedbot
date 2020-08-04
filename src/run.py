@@ -10,8 +10,6 @@ def format_time(secs):
     mins = (int(secs / 60))
     lsecs = int(secs % 60)
     ms = round((secs - int(secs)) * 1000)
-    if ms < 10:
-        ms *= 10
     if lsecs < 10:
         return f"{mins}:0{lsecs}.{ms}"
     else:
@@ -51,8 +49,12 @@ class Run:
         return self.data["date"]
     
     def get_comment(self):
-        log.debug("Returning comment")
-        return self.data["comment"]
+        if self.data["comment"] != None:
+            log.debug("Returning comment")
+            return self.data["comment"]
+        else:
+            log.debug("No comment found")
+            return ""
     
     def get_igt(self):
         """Returns the ingame time in seconds."""
