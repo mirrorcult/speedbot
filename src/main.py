@@ -144,7 +144,7 @@ async def change_presence():
     await speedbot.wait_until_ready()
     while not speedbot.is_closed():
         choice = random.choice(STATUSES)
-        log.info(f"Chose status '{choice}'!")
+        # log.info(f"Chose status '{choice}'!")
         activity = discord.Game(choice)
         await speedbot.change_presence(activity=activity)
         await asyncio.sleep(60 * 20)
@@ -161,8 +161,8 @@ async def new_run_alert():
             await channel.send("**A new run has been verified!**")
             embed = create_embed(api.newest_cached)
             await channel.send(embed=embed)
-        else:
-            log.info("No new runs found.")
+        # else:
+            # log.info("No new runs found.")
         await asyncio.sleep(60 * 5)
 
 if __name__ == "__main__":

@@ -23,6 +23,7 @@ class ApiHandler():
         # Caches the newest run's ID on init
         log.debug("Creating new ApiHandler instance!")
         self.newest_cached = None
+        self.seen_runs = []
         self.api = srcomapi.SpeedrunCom()
         self.api.debug = 1
 
@@ -78,10 +79,12 @@ class ApiHandler():
         # A very.. special query
         newest_id = self.api.get(f"runs?status=verified&game={GUR_GAME_ID}&orderby=verify-date&direction=desc&embed=category")[0]["id"]
         log.debug(f"Found newest run candidate {newest_id}")
-        if newest_id != self.newest_cached and self.newest_cached is not None:
+        if newest_id != self.newest_cached and self.newest_cached is not None and newest_id not in self.seen:
             # if newest_cached is None, that means we just initialized,
             # so there probably isn't actually a new run
             self.newest_cached = newest_id
+            self.seen.append(newest_id)
+            log.debug(f"Found actual new run {newest_id}!")
             return True
         self.newest_cached = newest_id
         return False

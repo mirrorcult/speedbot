@@ -1,3 +1,5 @@
+LOG_PATH = "/home/cyclowns/speedbot/speedbot.log"
+
 DEFAULT_CONFIG = {
     "version": 1,
     "disable_existing_loggers": True,
@@ -18,7 +20,7 @@ DEFAULT_CONFIG = {
             "level": "DEBUG",
             "formatter": "standard",
             "class": "logging.FileHandler",
-            "filename": "speedbot.log",
+            "filename": LOG_PATH,
         }
     },
     "loggers": {
