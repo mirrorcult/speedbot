@@ -20,7 +20,7 @@ DEFAULT_CONFIG = {
             "level": "DEBUG",
             "formatter": "standard",
             "class": "logging.FileHandler",
-            "filename": LOG_PATH,
+            "filename": "jeff.log",
         }
     },
     "loggers": {

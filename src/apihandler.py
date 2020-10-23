@@ -51,6 +51,7 @@ class ApiHandler():
     def get_place_from_run_id(self, run_id, category):
         """Returns a run's place given it's ID and category ID"""
         # This shouldn't be this hard. Why isn't place just included with runs?
+        log.debug(f"Getting place for run with ID {run_id} and category ID {category}")
         board = self.api.get(f"leaderboards/{GUR_GAME_ID}/category/{category}")
         for r in board["runs"]:
             if r["run"]["id"] == run_id:
