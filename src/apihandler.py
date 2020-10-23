@@ -98,4 +98,5 @@ class ApiHandler():
             log.debug(f"Found actual new run {newest_id}!")
             return True
         self.newest_cached = newest_id
+        self.newest_in_categories[newest_run[0]["category"]["data"]["id"]] = newest_id
         return False
