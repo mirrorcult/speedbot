@@ -54,7 +54,7 @@ def create_embed(run_id):
     date = run.get_date()
 
     embed = discord.Embed(
-        title=f"{player_name} {flag} | {suf(place)} (",
+        title=f"{player_name} {flag} | {suf(place)}",
         description=run.get_comment(),
         colour=discord.Colour.from_rgb(colour[0], colour[1], colour[2]),
     )
