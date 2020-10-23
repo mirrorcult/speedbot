@@ -34,7 +34,6 @@ def suf(n):
     return "%d%s" % (n, {1: "st", 2: "nd", 3: "rd"}
                      .get(n if n < 20 else n % 10, "th"))
 
-
 def create_embed(run_id):
     """Creates a discord.py embed using a given run's ID"""
     run = api.get_run(run_id)
@@ -43,7 +42,7 @@ def create_embed(run_id):
     player_name = player.get_name()
 
     place = api.get_place_from_run_id(run_id, run.get_category())
-    time = run.get_igt_formatted()
+    time = run.get_primary_time_formatted()
 
     flag = player.get_flag()
     colour = player.get_colour()
@@ -51,7 +50,7 @@ def create_embed(run_id):
     date = run.get_date()
 
     embed = discord.Embed(
-        title=f"{player_name} {flag} | {suf(place)}",
+        title=f"{player_name} {flag} | {suf(place)} (",
         description=run.get_comment(),
         colour=discord.Colour.from_rgb(colour[0], colour[1], colour[2]),
     )
@@ -85,7 +84,7 @@ def create_top_run_embed(category_name, n):
         player = api.get_player(run.get_runner_id())
         player_name = player.get_name()
         flag = player.get_flag()
-        time = run.get_igt_formatted()
+        time = run.get_primary_time_formatted()
         link = run.get_link()
 
         embed.add_field(
@@ -155,8 +154,8 @@ async def new_run_alert():
     If so, post an embed about it."""
     await speedbot.wait_until_ready()
     channel = speedbot.get_channel(GENERAL_ID)
-    while not speedbot.is_closed():
-        if api.check_for_new_run():
+    while True:
+        if api.check_for_new_run() and not speedbot.is_closed():
             log.info("Posting newest run automatically!")
             await channel.send("**A new run has been verified!**")
             embed = create_embed(api.newest_cached)

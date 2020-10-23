@@ -59,14 +59,20 @@ class Run:
             log.debug("No comment found")
             return ""
 
+    def get_primary_time(self):
+        """Returns primary time in seconds."""
+        log.debug("Returning primary time")
+        return self.data["times"]["primary_t"]
+
+    def get_primary_time_formatted(self):
+        return format_time(self.get_primary_time())
+
     def get_igt(self):
         """Returns the ingame time in seconds."""
         log.debug("Returning IGT")
         return self.data["times"]["ingame_t"]
 
     def get_igt_formatted(self):
-        """Returns the IGT formatted in M:S:ms."""
-        log.debug("Formatting IGT")
         return format_time(self.get_igt())
 
     def get_link(self):
