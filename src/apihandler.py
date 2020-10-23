@@ -23,9 +23,18 @@ class ApiHandler():
         # Caches the newest run's ID on init
         log.debug("Creating new ApiHandler instance!")
         self.newest_cached = None
+        self.newest_in_categories = {}
         self.seen_runs = []
         self.api = srcomapi.SpeedrunCom()
         self.api.debug = 1
+    
+    def cat_id_to_name(self, id):
+        for k, v in CATEGORIES.items():
+            if v == id:
+                return k
+
+    def cat_name_to_id(self, name):
+        return CATEGORIES.get(name, "")
 
     def get_run_id(self, category, name):
         """Retrieves a Give Up Robot SRC (PB) run's ID in the given
@@ -33,7 +42,7 @@ class ApiHandler():
         try:
             pbs = self.api.get(f"users/{name}/personal-bests?embed=game,category")
             for r in pbs:
-                if r["game"]["data"]["id"] == GUR_GAME_ID and r["category"]["data"]["id"] == CATEGORIES[category]:
+                if r["game"]["data"]["id"] == GUR_GAME_ID and r["category"]["data"]["id"] == self.cat_name_to_id(category):
                     log.info(f"Found run in {category} by {name}!")
                     return r["run"]["id"]  # done for compatibility reasons
         except srcomapi.exceptions.APIRequestException:
@@ -77,13 +86,15 @@ class ApiHandler():
            If one has, then set self.newest_cached to be equal to its ID,
            and return true."""
         # A very.. special query
-        newest_id = self.api.get(f"runs?status=verified&game={GUR_GAME_ID}&orderby=verify-date&direction=desc&embed=category")[0]["id"]
+        newest_run = self.api.get(f"runs?status=verified&game={GUR_GAME_ID}&orderby=verify-date&direction=desc&embed=category")
+        newest_id = newest_run[0]["id"]
         log.debug(f"Found newest run candidate {newest_id}")
-        if newest_id != self.newest_cached and self.newest_cached is not None and newest_id not in self.seen:
+        if newest_id != self.newest_cached and self.newest_cached is not None and newest_id not in self.seen_runs:
             # if newest_cached is None, that means we just initialized,
             # so there probably isn't actually a new run
             self.newest_cached = newest_id
-            self.seen.append(newest_id)
+            self.newest_in_categories[newest_run[0]["category"]["data"]["id"]] = newest_id
+            self.seen_runs.append(newest_id)
             log.debug(f"Found actual new run {newest_id}!")
             return True
         self.newest_cached = newest_id

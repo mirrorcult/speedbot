@@ -36,6 +36,10 @@ def suf(n):
 
 def create_embed(run_id):
     """Creates a discord.py embed using a given run's ID"""
+    if run_id == -1:
+        log.warning("Invalid run ID passed to create_embed")
+        return
+
     run = api.get_run(run_id)
     verifier_name = api.get_player(run.get_verifier()).get_name()
     player = api.get_player(run.get_runner_id())
@@ -124,8 +128,10 @@ async def top(ctx, category, n=10):
 
 
 @speedbot.command()
-async def newest(ctx):
+async def newest(ctx, category=None):
     """Returns info about the newest run submitted."""
+    api.check_for_new_run()
+
     # We can just trust that our ApiHandler has the newest one cached.
     run_id = api.newest_cached
     if not api.newest_cached:
@@ -133,9 +139,18 @@ async def newest(ctx):
         log.warning("Tried to post newest run before initializing finished!")
         return
 
-    log.info("Posting newest run after being asked!")
-    embed = create_embed(run_id)
-    await ctx.send(embed=embed)
+    if category is None:
+        log.info("Posting newest run in any category after being asked!")
+        embed = create_embed(run_id)
+        await ctx.send(embed=embed)
+    else:
+        log.info(f"Posting newest run in category {category} after being asked!")
+        run_id = api.newest_in_categories.get(api.cat_name_to_id(category), -1)
+        embed = create_embed(run_id)
+        if embed is not None:
+            await ctx.send(embed=embed)
+        else:
+            await ctx.send(f"No run cached for category {category} yet!")
 
 
 async def change_presence():
