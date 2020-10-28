@@ -54,6 +54,7 @@ class ApiHandler():
         log.debug(f"Getting place for run with ID {run_id} and category ID {category}")
         board = self.api.get(f"leaderboards/{GUR_GAME_ID}/category/{category}")
         for r in board["runs"]:
+            potential = r["run"]["id"]
             if r["run"]["id"] == run_id:
                 place = r["place"]
                 log.debug(f"Run {run_id} in category {category} has place {place}")
