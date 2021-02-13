@@ -7,7 +7,7 @@ from user import User
 from run import Run
 
 logging.config.dictConfig(DEFAULT_CONFIG)
-log = logging.getLogger("apihandler")
+log = logging.getLogger("game")
 
 
 class CategoryLevel():
@@ -19,23 +19,18 @@ class CategoryLevel():
         self.newest = None
 
 
-class ApiHandler():
-    """Class that handles returning info from the leaderboard,
-    and checking for new runs."""
-
+class Game():
+    """Handles returning info from a game's leaderboard,
+    checking for new runs, and returning other data."""
     def __init__(self, game_id):
         # Caches the newest run's ID on init
-        log.debug(f"Creating new ApiHandler instance for game {game_id}!")
-        self.game_id = game_id
+        log.debug(f"Creating new Game instance for game {game_id}!")
         self.newest_cached = None
         self.seen_runs = []
         self.api = srcomapi.SpeedrunCom()
         self.api.debug = 1
 
-        self.categories = []
-        self.levels = []
-        self.populate_categories()
-        self.populate_levels()
+        self.set_game(game_id)
 
     def categorylevel_name_from_id(self, id):
         for c in self.categories:
@@ -54,21 +49,41 @@ class ApiHandler():
                 return l.id
         return name
 
-    def populate_categories(self):
-        """Creates a list self.categories containing Category classes, containing info about the categories."""
+    def set_game(self, game_id):
+        """Sets the current game ID/name to game for use with the API, and
+        updates categories respectively. game_id can also technically
+        be the name of the game on SRC (e.g. smb1, celeste, tein)"""
+
+        # we can't -just- set it to game_id because it could be a soft-ID
+        # like celeste, smb1, tein etc
+        # and soft IDs work fine for most things, but NOT FOR /run?game={game_id}
+        # so fuck you SRC, I have to make it an actual ID
+        game_data = self.api.get(f"games/{game_id}")
+        self.game_id = game_data["id"]
+        self.name = game_data["names"]["international"]
+        self.abbreviation = game_data["abbreviation"]
+        self.created_time = game_data["created"]
+
+        self.populate_categories_and_levels()
+
+    def populate_categories_and_levels(self):
+        """Creates lists self.categories and self.levels containing CategoryLevel
+        classes, which contain info about the categories/levels in the game."""
         categories = self.api.get(f"games/{self.game_id}/categories")
+        self.categories = []
         for c in categories:
             cat = CategoryLevel(c["id"], c["name"], c["rules"])
             self.categories.append(cat)
 
-    def populate_levels(self):
-        """Creates a list self.levels containing Level classes, containing info about the levels."""
         levels = self.api.get(f"games/{self.game_id}/levels")
+        self.levels = []
         for c in levels:
             cat = CategoryLevel(c["id"], c["name"], c["rules"])
             self.levels.append(cat)
 
     def fuzzy_match_categorylevel(self, text):
+        """Returns the closest match to text contained in the names of
+        the categories/levels for the current game"""
         names = []
         for c in self.categories:
             names.append(c.name)
@@ -77,8 +92,8 @@ class ApiHandler():
         return process.extractOne(text, names)[0]
 
     def get_run_id(self, category, user):
-        """Retrieves a Give Up Robot SRC (PB) run's ID in the given
-        category name by the given username."""
+        """Retrieves a run's ID in the given
+        category name by the given user."""
         try:
             cat_name = self.fuzzy_match_categorylevel(category)
             leaderboard = self.get_categorylevel_leaderboard(cat_name)
@@ -160,3 +175,8 @@ class ApiHandler():
         self.newest_cached = newest_id
         self.newest_in_categories[newest_run[0]["category"]["data"]["id"]] = newest_id
         return False
+    
+    def get_number_of_runners(self):
+        # if this doesnt give the right data its because self.game_id
+        # is the abbreviation and not the real game ID
+        runs = self.api.get(f"runs?status=verified&game={self.game_id}")

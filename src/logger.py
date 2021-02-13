@@ -41,7 +41,7 @@ DEFAULT_CONFIG = {
             "level": "DEBUG",
             "propagate": False
         },
-        "apihandler": {
+        "game": {
             "handlers": ["console", "file"],
             "level": "DEBUG",
             "propagate": False

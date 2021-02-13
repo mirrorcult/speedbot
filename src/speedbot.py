@@ -8,10 +8,10 @@ import config
 import logger
 from secret import BOT_TOKEN
 from run import Run
-from apihandler import ApiHandler
+from game import Game
 
 speedbot = commands.Bot(command_prefix=config.PREFIX)
-api = ApiHandler(config.GAME_ID)
+api = Game(config.GAME_ID)
 logging.config.dictConfig(logger.DEFAULT_CONFIG)
 log = logging.getLogger("bot")
 
@@ -92,7 +92,7 @@ def create_top_run_embed(category_name, n):
 @speedbot.command()
 async def game(ctx, game):
     """Changes game ID"""
-    api.game_id = game
+    api.set_game(game)
     log.info(f"Changed game to {game}")
     await ctx.send(f"Changed game to {game}!")
 
@@ -130,7 +130,7 @@ async def newest(ctx, category=None):
     """Returns info about the newest run submitted."""
     api.check_for_new_run()
 
-    # We can just trust that our ApiHandler has the newest one cached.
+    # We can just trust that our Game has the newest one cached.
     run_id = api.newest_cached
     if not api.newest_cached:
         await ctx.send("Not finished initializing!")

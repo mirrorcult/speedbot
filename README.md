@@ -6,14 +6,17 @@ Discord bot utilizing the SRC API for speedrunning-related discords.
 
 ![sc1](https://i.imgur.com/NXICU3k.png) ![sc2](https://i.imgur.com/1d5io7N.png)
 
-It can:
+## Commands
 
-- Give info about runs based on fuzzy-matched category/level and player names with fancy embeds
-- Post the top `n` runs in a given category with fancy embeds
-- Alert people in a given channel when new runs are posted
-- Give info about games and categories, like # of runners, rules, and so on (TODO)
+### Optional Commands
 
-## Running
+These commands are all optional, and must be enabled in config.py to work properly.
+
+`.markov`
+
+Funny markov text generation.
+
+## Running it yourself
 
 First, create a discord bot application.
 
