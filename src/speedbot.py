@@ -4,28 +4,15 @@ import random
 from discord.ext import commands
 import logging.config
 
-from config import BOT_TOKEN
-from logger import DEFAULT_CONFIG
+import config
+import logger
+from secret import BOT_TOKEN
 from run import Run
 from apihandler import ApiHandler
 
-if 1 == 1:
-    GENERAL_ID = 688951042498363415
-else:
-    GENERAL_ID = 465058736608641049  # testing purposes
-
-STATUSES = [
-    "failing at 50 HSG",
-    "resetting on 1",
-    "dying on 47",
-    "turning particles off",
-    "Wallkicks will Work",
-    "using sorcery to skip 45"
-]
-
-speedbot = commands.Bot(command_prefix=".")
-api = ApiHandler()
-logging.config.dictConfig(DEFAULT_CONFIG)
+speedbot = commands.Bot(command_prefix=config.PREFIX)
+api = ApiHandler(config.GAME_ID)
+logging.config.dictConfig(logger.DEFAULT_CONFIG)
 log = logging.getLogger("bot")
 
 
@@ -34,6 +21,7 @@ def suf(n):
     return "%d%s" % (n, {1: "st", 2: "nd", 3: "rd"}
                      .get(n if n < 20 else n % 10, "th"))
 
+
 def create_embed(run_id):
     """Creates a discord.py embed using a given run's ID"""
     if run_id == -1:
@@ -41,40 +29,41 @@ def create_embed(run_id):
         return
 
     run = api.get_run(run_id)
-    verifier_name = api.get_player(run.get_verifier()).get_name()
-    player = api.get_player(run.get_runner_id())
-    player_name = player.get_name()
+    verifier_name = api.get_user(run.get_verifier_id()).get_name()
+    runner = api.get_user(run.get_runner_id())
+    runner_name = runner.get_name()
 
-    place = api.get_place_from_run_id(run_id, run.get_category())
+    place = api.get_place_from_run_id(run_id, run.get_category_id())
     time = run.get_primary_time_formatted()
+    category = api.categorylevel_name_from_id(run.get_category_id())
 
-    flag = player.get_flag()
-    colour = player.get_colour()
+    flag = runner.get_flag()
+    colour = runner.get_colour()
     link = run.get_link()
     date = run.get_date()
 
     embed = discord.Embed(
-        title=f"{player_name} {flag} | {suf(place)}",
+        title=f"{runner_name} {flag} | {suf(place)} in {category}",
         description=run.get_comment(),
         colour=discord.Colour.from_rgb(colour[0], colour[1], colour[2]),
     )
 
     if int(place) <= 4:
         embed.set_thumbnail(
-            url=f"https://www.speedrun.com/themes/gur1/{suf(place)}.png"
+            url=f"https://www.speedrun.com/themes/{api.game_id}/{suf(place)}.png"
         )
 
     embed.set_footer(text=f"Submitted on {date}, verified by {verifier_name}")
     embed.add_field(name="Time", value=time, inline=False)
     embed.add_field(name="Link", value=link, inline=False)
 
-    log.info(f"Created embed for run by {player_name} in {time}, with color {colour}")
+    log.info(f"Created embed for run by {runner_name} in {time}, with color {colour}")
     return embed
 
 
 def create_top_run_embed(category_name, n):
     """Creates an embed containing the top n runs in the given category."""
-    runs = api.get_leaderboard_data(category_name)["runs"]
+    runs = api.get_category_leaderboard(category_name)["runs"]
     n = n if len(runs) > n else len(runs)
 
     embed = discord.Embed(
@@ -85,19 +74,27 @@ def create_top_run_embed(category_name, n):
     for x in range(n):
         run = Run(runs[x]["run"])  # run
 
-        player = api.get_player(run.get_runner_id())
-        player_name = player.get_name()
-        flag = player.get_flag()
+        runner = api.get_user(run.get_runner_id())
+        runner_name = runner.get_name()
+        flag = runner.get_flag()
         time = run.get_primary_time_formatted()
         link = run.get_link()
 
         embed.add_field(
-            name=f"{suf(x + 1)} | {flag} {player_name} | {time}",
+            name=f"{suf(x + 1)} | {flag} {runner_name} | {time}",
             value=link,
             inline=False
         )
 
     return embed
+
+@speedbot.command()
+async def game(ctx, game):
+    """Changes game ID"""
+    global api  #fuck you im not refactoring
+    api = ApiHandler(game)
+    log.info(f"Changed game to {game}")
+    await ctx.send(f"Changed game to {game}!")
 
 
 @speedbot.command()
@@ -157,7 +154,7 @@ async def change_presence():
     """Randomizes Speedbot's presence to somethin funny I guess."""
     await speedbot.wait_until_ready()
     while not speedbot.is_closed():
-        choice = random.choice(STATUSES)
+        choice = random.choice(config.STATUSES)
         # log.info(f"Chose status '{choice}'!")
         activity = discord.Game(choice)
         await speedbot.change_presence(activity=activity)

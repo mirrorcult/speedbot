@@ -1,6 +1,6 @@
 import unittest
 from apihandler import ApiHandler, CATEGORIES, GUR_GAME_ID
-from player import hex_to_rgb, Player
+from user import hex_to_rgb, User
 
 
 class TestApiHandler(unittest.TestCase):
@@ -32,14 +32,14 @@ class TestApiHandler(unittest.TestCase):
         place = api.get_place_from_run_id("smwdmaskdoz", CATEGORIES["normal"])
         self.assertEqual(place, 0)
 
-    def test_get_player(self):
+    def test_get_user(self):
         api = ApiHandler()
-        user = api.get_player("cyclowns")
+        user = api.get_user("cyclowns")
         self.assertEqual(user.get_name(), "cyclowns")
 
-    def test_get_player_guest(self):
+    def test_get_user_guest(self):
         api = ApiHandler()
-        user = api.get_player("btspider")
+        user = api.get_user("btspider")
         self.assertEqual(user.get_name(), "btspider")
 
     def test_get_run(self):
@@ -65,48 +65,48 @@ class TestApiHandler(unittest.TestCase):
         self.assertTrue(api.check_for_new_run())
 
 
-class TestPlayer(unittest.TestCase):
-    """Tests for player.py"""
+class TestUser(unittest.TestCase):
+    """Tests for user.py"""
     def test_hex_to_rgb(self):
         h1 = "#FF0000"
         self.assertEqual(hex_to_rgb(h1), (255, 0, 0))
 
     def test_get_name_guest(self):
-        p = Player(None, "bart simpson")
+        p = User(None, "bart simpson")
         self.assertEqual(p.get_name(), "bart simpson")
 
     def test_get_name_user(self):
         api = ApiHandler()
-        p = api.get_player("cyclowns")
+        p = api.get_user("cyclowns")
         self.assertEqual(p.get_name(), "cyclowns")
 
     def test_get_colour_guest(self):
-        p = Player(None, "woohooboy")
+        p = User(None, "woohooboy")
         self.assertEqual(p.get_colour(), hex_to_rgb("#555555"))
 
     def test_get_colour_user(self):
         api = ApiHandler()
-        p = api.get_player("cyclowns")
+        p = api.get_user("cyclowns")
         self.assertIsNotNone(p.get_colour())
 
     def test_get_flag_guest(self):
-        p = Player(None, "asphalt")
+        p = User(None, "asphalt")
         self.assertEqual(p.get_flag(), "")
 
     def test_get_flag_province(self):
         api = ApiHandler()
-        p = api.get_player("alexbest20")
+        p = api.get_user("alexbest20")
         self.assertEqual(p.get_flag(), ":flag_ca:")
 
     def test_get_flag_nolocation(self):
         api = ApiHandler()
         # no location guy, better hope he doesnt add one
-        p = api.get_player("KyleKatt")
+        p = api.get_user("KyleKatt")
         self.assertEqual(p.get_flag(), "")
 
     def test_get_flag_withlocation(self):
         api = ApiHandler()
-        p = api.get_player("cyclowns")
+        p = api.get_user("cyclowns")
         self.assertEqual(p.get_flag(), ":flag_us:")
 
 
@@ -115,7 +115,7 @@ class TestRun(unittest.TestCase):
     def test_get_verifier(self):
         api = ApiHandler()
         run = api.get_run("7yl11n2m")
-        verifier = api.get_player(run.get_verifier())
+        verifier = api.get_user(run.get_verifier())
         self.assertEqual(verifier.get_name(), "zachsk")
 
     def test_get_runner_id_guest(self):

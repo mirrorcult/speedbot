@@ -8,7 +8,7 @@ Basic discord bot utilizing the SRC API for the GUR speedrunning discord. In the
 
 First, create a discord bot application.
 
-Then create a file called `config.py` in the `src` directory with contents like this:
+Then create a file called `secret.py` in the `src` directory with contents like this:
 
 ```python
 BOT_TOKEN = "{your bot token here}"

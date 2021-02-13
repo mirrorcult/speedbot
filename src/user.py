@@ -3,7 +3,7 @@ import logging.config
 from logger import DEFAULT_CONFIG
 
 logging.config.dictConfig(DEFAULT_CONFIG)
-log = logging.getLogger("player")
+log = logging.getLogger("user")
 
 
 def hex_to_rgb(h):
@@ -12,11 +12,11 @@ def hex_to_rgb(h):
     return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
 
 
-class Player:
-    """Wrapper around player data that implements some nice getter functions
-    and opens up the path for caching stuff. Player.data is nullable."""
+class User:
+    """Wrapper around user data that implements some nice getter functions
+    and opens up the path for caching stuff. User.data is nullable."""
     def __init__(self, data, guest_name=None):
-        log.debug(f"Creating new {'guest' if guest_name else 'regular'} Player instance!")
+        log.debug(f"Creating new {'guest' if guest_name else 'regular'} User instance!")
         self.data = data
         self.guest_name = guest_name
 
@@ -25,6 +25,10 @@ class Player:
         if self.guest_name:
             return self.guest_name
         return self.data["names"]["international"]
+    
+    def get_id(self):
+        """Return's a user's ID."""
+        return self.data["id"]
 
     def get_colour(self):
         """Returns a user's start gradient color as an RGB tuple."""
@@ -36,7 +40,7 @@ class Player:
 
     def get_flag(self):
         """Returns a text string formatted as a discord emoji
-        corresponding to the player's country's flag."""
+        corresponding to the user's country's flag."""
         if self.guest_name or self.data["location"] is None:
             log.debug("No flag found!")
             return ""

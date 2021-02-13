@@ -1,6 +1,6 @@
 # python
 src/__pycache__
-src/config.py
+src/secret.py
 speedbot.log
 
 # coverage

@@ -1,4 +1,6 @@
 srcomapi
 discord.py
+fuzzywuzzy
+python-Levenshtein
 flake8
 coverage

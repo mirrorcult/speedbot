@@ -1,4 +1,11 @@
-LOG_PATH = "/home/cyclowns/speedbot/speedbot.log"
+import platform
+import sys
+
+if platform.system() == "Linux":
+    LOG_PATH = "/home/cyclowns/speedbot/speedbot.log"
+elif platform.system() == "Windows":
+    # debug only
+    LOG_PATH = "K:\\github.com\\cyclowns\\speedbot\\speedbot.log"
 
 DEFAULT_CONFIG = {
     "version": 1,
@@ -44,7 +51,7 @@ DEFAULT_CONFIG = {
             "level": "DEBUG",  # a little less important
             "propagate": False,
         },
-        "player": {
+        "user": {
             "handlers": ["console", "file"],
             "level": "DEBUG",
             "propagate": False,

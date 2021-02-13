@@ -19,15 +19,15 @@ def format_time(secs):
 
 class Run:
     """Wrapper around run data that implements some nice getter functions
-    and opens up the path for caching stuff. Similar to Player."""
+    and opens up the path for caching stuff. Similar to User."""
     def __init__(self, data):
         self.data = data
 
     def get_run_id(self):
         return self.data["id"]
 
-    def get_verifier(self):
-        """Returns the verifier's player ID."""
+    def get_verifier_id(self):
+        """Returns the verifier's user ID."""
         log.debug("Returning verifier")
         return self.data["status"]["examiner"]
 
@@ -39,13 +39,17 @@ class Run:
             log.debug("No ID found, returning guest name")
             return self.data["players"][0]["name"]
 
-    def get_game(self):
-        log.debug("Returning game")
+    def get_GAME_ID(self):
+        log.debug("Returning game ID")
         return self.data["game"]
 
-    def get_category(self):
-        log.debug("Returning category")
+    def get_category_id(self):
+        log.debug("Returning category ID")
         return self.data["category"]
+
+    def get_level_id(self):
+        log.debug("Returning level ID")
+        return self.data["level"]
 
     def get_date(self):
         log.debug("Returning date")

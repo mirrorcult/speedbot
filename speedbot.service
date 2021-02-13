@@ -4,7 +4,7 @@ After=default.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python3 /usr/share/speedbot/src/main.py
+ExecStart=/usr/bin/python3 /usr/share/speedbot/src/speedbot.py
 
 [Install]
 WantedBy=default.target
