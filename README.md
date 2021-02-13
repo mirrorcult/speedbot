@@ -2,7 +2,16 @@
 
 ![Python application](https://github.com/cyclowns/speedbot/workflows/Python%20application/badge.svg) ![codecov](https://codecov.io/gh/cyclowns/speedbot/branch/master/graph/badge.svg)
 
-Basic discord bot utilizing the SRC API for the GUR speedrunning discord. In the future, this will be generalized to any SRC game
+Discord bot utilizing the SRC API for speedrunning-related discords.
+
+![sc1](https://i.imgur.com/NXICU3k.png) ![sc2](https://i.imgur.com/1d5io7N.png)
+
+It can:
+
+- Give info about runs based on fuzzy-matched category/level and player names with fancy embeds
+- Post the top `n` runs in a given category with fancy embeds
+- Alert people in a given channel when new runs are posted
+- Give info about games and categories, like # of runners, rules, and so on (TODO)
 
 ## Running
 
@@ -14,7 +23,7 @@ Then create a file called `secret.py` in the `src` directory with contents like 
 BOT_TOKEN = "{your bot token here}"
 ```
 
-You also probably wanna change the channel IDs in src/main.py to match up with whatever you're doing, I guess? I don't know who else would use this besides our discord, though.
+You also probably wanna change the channel IDs in src/config.py if you want newest run announcements (TODO: config to disable this)
 
 Run these commands (assuming python3 and pip are installed and in your system PATH):
 
