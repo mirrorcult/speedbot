@@ -1,6 +1,6 @@
 import srcomapi
 import logging.config
-from fuzzywuzzy import process, fuzz
+from fuzzywuzzy import process
 
 from logger import DEFAULT_CONFIG
 from user import User
@@ -9,6 +9,7 @@ from run import Run
 logging.config.dictConfig(DEFAULT_CONFIG)
 log = logging.getLogger("apihandler")
 
+
 class CategoryLevel():
     """Contains data about a category or level. Rules is nullable"""
     def __init__(self, id, name, rules):
@@ -16,6 +17,7 @@ class CategoryLevel():
         self.name = name
         self.rules = rules
         self.newest = None
+
 
 class ApiHandler():
     """Class that handles returning info from the leaderboard,
@@ -42,7 +44,7 @@ class ApiHandler():
         for l in self.levels:
             if l.id == id:
                 return l.name
-    
+
     def categorylevel_id_from_name(self, name):
         for c in self.categories:
             if c.name == name:
@@ -64,7 +66,7 @@ class ApiHandler():
         levels = self.api.get(f"games/{self.game_id}/levels")
         for c in levels:
             cat = CategoryLevel(c["id"], c["name"], c["rules"])
-            self.levels.append(cat)        
+            self.levels.append(cat)
 
     def fuzzy_match_categorylevel(self, text):
         names = []
@@ -93,7 +95,8 @@ class ApiHandler():
                 names_by_run[run_data.get_run_id()] = user_name
             name = process.extractOne(user, names_by_run.values())[0]
             log.info(f"Found run in {cat_name} by {name}!")
-            return list(names_by_run.keys())[list(names_by_run.values()).index(name)] # thanks speedrun.com
+            # thanks speedrun.com
+            return list(names_by_run.keys())[list(names_by_run.values()).index(name)]
         except srcomapi.exceptions.APIRequestException:
             return None
 

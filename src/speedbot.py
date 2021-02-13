@@ -63,7 +63,7 @@ def create_embed(run_id):
 
 def create_top_run_embed(category_name, n):
     """Creates an embed containing the top n runs in the given category."""
-    runs = api.get_category_leaderboard(category_name)["runs"]
+    runs = api.get_categorylevel_leaderboard(category_name)["runs"]
     n = n if len(runs) > n else len(runs)
 
     embed = discord.Embed(
@@ -88,11 +88,11 @@ def create_top_run_embed(category_name, n):
 
     return embed
 
+
 @speedbot.command()
 async def game(ctx, game):
     """Changes game ID"""
-    global api  #fuck you im not refactoring
-    api = ApiHandler(game)
+    api.game_id = game
     log.info(f"Changed game to {game}")
     await ctx.send(f"Changed game to {game}!")
 
@@ -103,7 +103,8 @@ async def run(ctx, category, name):
     run = api.get_run_id(category, name)
     if not run:
         log.warning(f"Could not find run for {name} in {category}!")
-        await ctx.send(f"No run for `{name}` in category `{category}` found! Either they aren't on the leaderboards or are a guest user.")
+        await ctx.send(f"No run for `{name}` in category `{category}` found!\
+            Either they aren't on the leaderboards or are a guest user.")
         return
 
     log.info(f"Posting run by {name} in {category} after being asked")
@@ -165,7 +166,7 @@ async def new_run_alert():
     """Runs every 5 minutes. Will check if there has been a new run verified.
     If so, post an embed about it."""
     await speedbot.wait_until_ready()
-    channel = speedbot.get_channel(GENERAL_ID)
+    channel = speedbot.get_channel(config.GENERAL_ID)
     while True:
         if api.check_for_new_run() and not speedbot.is_closed():
             log.info("Posting newest run automatically!")
