@@ -35,5 +35,5 @@ coverage run src/tests.py
 If all the tests pass, you're good to run this command:
 
 ```sh
-python src/main.py
+python src/speedbot.py
 ```
