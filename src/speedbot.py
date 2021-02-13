@@ -1,6 +1,8 @@
 import asyncio
 import discord
 import random
+import os
+import markovify
 from discord.ext import commands
 import logging.config
 
@@ -14,6 +16,13 @@ speedbot = commands.Bot(command_prefix=config.PREFIX)
 api = ApiHandler(config.GAME_ID)
 logging.config.dictConfig(logger.DEFAULT_CONFIG)
 log = logging.getLogger("bot")
+
+botdir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+assetsdir = os.path.join(botdir, "assets")
+
+with open(os.path.join(assetsdir, "text-corpus.txt"), encoding="utf8", errors="ignore") as f:
+    text_data = f.read()
+text_model = markovify.NewlineText(text_data).compile()
 
 
 def suf(n):
@@ -85,16 +94,24 @@ def create_top_run_embed(category_name, n):
             value=link,
             inline=False
         )
-
     return embed
+
 
 @speedbot.command()
 async def game(ctx, game):
     """Changes game ID"""
-    global api  #fuck you im not refactoring
-    api = ApiHandler(game)
+    api.game_id = game
     log.info(f"Changed game to {game}")
     await ctx.send(f"Changed game to {game}!")
+
+
+@speedbot.command()
+async def markov(ctx):
+    generated = text_model.make_sentence(max_overlap_ratio=0.85)
+    generated_trim = generated.replace("@", " @ ")\
+        .replace("&quot;", "\"")\
+        .replace("&#39;", "'")
+    await ctx.send(generated_trim)
 
 
 @speedbot.command()

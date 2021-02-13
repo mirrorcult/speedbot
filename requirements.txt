@@ -4,3 +4,4 @@ fuzzywuzzy
 python-Levenshtein
 flake8
 coverage
+markovify

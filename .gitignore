@@ -14,3 +14,6 @@ nohup.out
 
 # ide stuff
 .vscode/
+
+# optional stuff
+assets/text-corpus.txt
