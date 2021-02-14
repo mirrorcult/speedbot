@@ -4,6 +4,7 @@ import random
 import os
 import markovify
 from discord.ext import commands
+from fuzzywuzzy import process
 import logging.config
 
 import config
@@ -27,10 +28,10 @@ def suf(n):
                      .get(n if n < 20 else n % 10, "th"))
 
 
-def create_embed(run_id):
+def create_run_embed(run_id):
     """Creates a discord.py embed using a given run's ID"""
     if run_id == -1:
-        log.warning("Invalid run ID passed to create_embed")
+        log.warning("Invalid run ID passed to create_run_embed")
         return
 
     run = api.get_run(run_id)
@@ -55,7 +56,7 @@ def create_embed(run_id):
 
     if int(place) <= 4:
         embed.set_thumbnail(
-            url=f"https://www.speedrun.com/themes/{api.game_id}/{suf(place)}.png"
+            url=f"https://www.speedrun.com/themes/{api.abbreviation}/{suf(place)}.png"
         )
 
     embed.set_footer(text=f"Submitted on {date}, verified by {verifier_name}")
@@ -93,14 +94,53 @@ def create_top_run_embed(category_name, n):
     return embed
 
 
+def create_cinfo_embed(categorylevel):
+    pass
+
+def create_ginfo_embed(game):
+    pass
+
 @speedbot.command()
 async def game(ctx, game):
     """Changes game ID"""
     if(config.CHANGEABLE_GAME):
         api.set_game(game)
-        await ctx.send(f"Setting game to {game}, prompted by {ctx.author.name}.")
+        await ctx.send(f"Setting game to {game}!")
     else:
         await ctx.send(f"Changing game not enabled in config.")
+
+
+@speedbot.command()
+async def clinfo(ctx, category):
+    pass
+
+
+@speedbot.command()
+async def cllist(ctx):
+    message = ""
+
+
+@speedbot.command()
+async def gameinfo(ctx):
+    pass
+
+
+@speedbot.command()
+async def link(ctx, path=None):
+    srcl = f"https://speedrun.com/{api.abbreviation}"
+    possible_paths = ["guides", "resources", "streams", "forum", "gamestats", "leaderboard", "levels_leaderboard"]
+    if not path:
+        await ctx.send(f"<{srcl}>")
+        return
+    result = process.extractOne(path, possible_paths)
+    log.info(f"Matched {path} to {result[0]} with {result[1]} confidence")
+    p = result[0]
+    if p == "leaderboard":
+        await ctx.send(f"<{srcl}/full_game>")
+    elif p == "levels_leaderboard":
+        await ctx.send(f"<{srcl}/individual_levels>")
+    else:
+        await ctx.send(f"<{srcl}/{p}>")
 
 
 @speedbot.command()
@@ -122,12 +162,27 @@ async def run(ctx, category, name):
     run = api.get_run_id(category, name)
     if not run:
         log.warning(f"Could not find run for {name} in {category}!")
-        await ctx.send(f"No run for `{name}` in category `{category}` found!\
-            Either they aren't on the leaderboards or are a guest user.")
+        await ctx.send(f"No run for `{name}` in category `{category}` found! Either they aren't on the leaderboards or are a guest user.")
         return
 
-    log.info(f"Posting run by {name} in {category} after being asked")
-    embed = create_embed(run)
+    log.info(f"Posting run by {name} in {category}, prompted by {ctx.author.name}")
+    embed = create_run_embed(run)
+    await ctx.send(embed=embed)
+
+
+@speedbot.command()
+async def place(ctx, category, place=1):
+    if type(place) != int:
+        await ctx.send("Place is not an integer!")
+        return
+    run_id = api.get_run_with_place(category, place)
+    if not run_id:
+        log.warning(f"Couldn't find run with place {place} in {category}")
+        await ctx.send("Place is either <= 0 or more than the number of runners in the category.")
+        return
+
+    log.info(f"Posting run with place {place} in {category}")
+    embed = create_run_embed(run_id)
     await ctx.send(embed=embed)
 
 
@@ -158,12 +213,12 @@ async def newest(ctx, category=None):
 
     if category is None:
         log.info(f"Posting newest run in any category, prompted by {ctx.author.name}")
-        embed = create_embed(run_id)
+        embed = create_run_embed(run_id)
         await ctx.send(embed=embed)
     else:
         log.info(f"Posting newest run in category {category}, prompted by {ctx.author.name}")
         run_id = api.newest_in_categories.get(api.cat_name_to_id(category), -1)
-        embed = create_embed(run_id)
+        embed = create_run_embed(run_id)
         if embed is not None:
             await ctx.send(embed=embed)
         else:
@@ -190,7 +245,7 @@ async def new_run_alert():
         if api.check_for_new_run() and not speedbot.is_closed():
             log.info("Posting newest run automatically!")
             await channel.send("**A new run has been verified!**")
-            embed = create_embed(api.newest_cached)
+            embed = create_run_embed(api.newest_cached)
             await channel.send(embed=embed)
         # else:
             # log.info("No new runs found.")

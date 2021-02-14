@@ -112,10 +112,10 @@ class Game():
                 except KeyError:
                     continue
                 names_by_run[run_data.get_run_id()] = user_name
-            name = process.extractOne(user, names_by_run.values())[0]
-            log.info(f"Found run in {cat_name} by {name}!")
+            result = process.extractOne(user, names_by_run.values())
+            log.info(f"Found run by and matched user {user} to {result[0]} with {result[1]}% confidence")
             # thanks speedrun.com
-            return list(names_by_run.keys())[list(names_by_run.values()).index(name)]
+            return list(names_by_run.keys())[list(names_by_run.values()).index(result[0])]
         except srcomapi.exceptions.APIRequestException:
             return None
 
@@ -179,8 +179,20 @@ class Game():
         self.newest_cached = newest_id
         self.newest_in_categories[newest_run[0]["category"]["data"]["id"]] = newest_id
         return False
-    
+
     def get_number_of_runners(self):
         # if this doesnt give the right data its because self.game_id
         # is the abbreviation and not the real game ID
         runs = self.api.get(f"runs?status=verified&game={self.game_id}")
+        return runs.length()
+
+    def get_run_with_place(self, category, place):
+        leaderboard = self.get_categorylevel_leaderboard(self.fuzzy_match_categorylevel(category))
+        # I'm aware this is unoptimized but I'm lazy ill fix it later
+        for r in leaderboard["runs"]:
+            potential = r["place"]
+            if potential == place:
+                log.debug(f"Run with place {place} in {category} is {r['run']['id']}")
+                return r["run"]["id"]
+        # nothing found
+        return None
