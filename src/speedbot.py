@@ -12,17 +12,13 @@ from secret import BOT_TOKEN
 from run import Run
 from game import Game
 
+log = logging.getLogger("bot")
+logging.config.dictConfig(logger.DEFAULT_CONFIG)
 speedbot = commands.Bot(command_prefix=config.PREFIX)
 api = Game(config.GAME_ID)
-logging.config.dictConfig(logger.DEFAULT_CONFIG)
-log = logging.getLogger("bot")
 
-botdir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-assetsdir = os.path.join(botdir, "assets")
-
-with open(os.path.join(assetsdir, "text-corpus.txt"), encoding="utf8", errors="ignore") as f:
-    text_data = f.read()
-text_model = markovify.NewlineText(text_data).compile()
+basedir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+assetsdir = os.path.join(basedir, "assets")
 
 
 def suf(n):
@@ -100,17 +96,24 @@ def create_top_run_embed(category_name, n):
 @speedbot.command()
 async def game(ctx, game):
     """Changes game ID"""
-    api.set_game(game)
-    await ctx.send(f"Changed game to {game}!")
+    if(config.CHANGEABLE_GAME):
+        api.set_game(game)
+        await ctx.send(f"Setting game to {game}, prompted by {ctx.author.name}.")
+    else:
+        await ctx.send(f"Changing game not enabled in config.")
 
 
 @speedbot.command()
 async def markov(ctx):
-    generated = text_model.make_sentence(max_overlap_ratio=0.85)
-    generated_trim = generated.replace("@", " @ ")\
-        .replace("&quot;", "\"")\
-        .replace("&#39;", "'")
-    await ctx.send(generated_trim)
+    if(config.MARKOV_TEXT_GENERATION):
+        generated = text_model.make_sentence(max_overlap_ratio=0.85)
+        generated_trim = generated.replace("@", " @ ")\
+            .replace("&quot;", "\"")\
+            .replace("&#39;", "'")
+        log.info(f"Generated markov text for user {ctx.author.name}")
+        await ctx.send(generated_trim)
+    else:
+        await ctx.send("Markov text generation not enabled in config.")
 
 
 @speedbot.command()
@@ -132,11 +135,11 @@ async def run(ctx, category, name):
 async def top(ctx, category, n=10):
     """Returns info about the top n runs in a category."""
     if n > 20 or n < 1:
-        log.warning(f"User tried to return top {n} logs, out of range!")
+        log.warning(f"User {ctx.author.name} tried to return top {n} logs, out of range!")
         await ctx.send("Number of runs must be <= 20 and > 1!")
         return
 
-    log.info(f"Posting top {n} runs in {category} after being asked")
+    log.info(f"Posting top {n} runs in {category}, prompted by {ctx.author.name}")
     embed = create_top_run_embed(category, n)
     await ctx.send(embed=embed)
 
@@ -154,11 +157,11 @@ async def newest(ctx, category=None):
         return
 
     if category is None:
-        log.info("Posting newest run in any category after being asked!")
+        log.info(f"Posting newest run in any category, prompted by {ctx.author.name}")
         embed = create_embed(run_id)
         await ctx.send(embed=embed)
     else:
-        log.info(f"Posting newest run in category {category} after being asked!")
+        log.info(f"Posting newest run in category {category}, prompted by {ctx.author.name}")
         run_id = api.newest_in_categories.get(api.cat_name_to_id(category), -1)
         embed = create_embed(run_id)
         if embed is not None:
@@ -194,6 +197,22 @@ async def new_run_alert():
         await asyncio.sleep(60 * 5)
 
 if __name__ == "__main__":
-    speedbot.loop.create_task(new_run_alert())
-    speedbot.loop.create_task(change_presence())
+    if config.MARKOV_TEXT_GENERATION:
+        log.info(f"Enabled markov text generation on file {config.MARKOV_TEXT_FILE}")
+        with open(os.path.join(assetsdir, config.MARKOV_TEXT_FILE), encoding="utf8", errors="ignore") as f:
+            text_data = f.read()
+        text_model = markovify.NewlineText(text_data).compile()
+    else:
+        log.info("Markov text generation disabled")
+
+    if (config.NEW_RUN_POSTING):
+        log.info(f"Enabled new run posting on channel {config.GENERAL_ID}")
+        speedbot.loop.create_task(new_run_alert())
+    else:
+        log.info("New run posting disabled")
+    if (config.RANDOM_STATUS):
+        log.info("Enabled random status updates")
+        speedbot.loop.create_task(change_presence())
+    else:
+        log.info("Random status updates disabled")
     speedbot.run(BOT_TOKEN)

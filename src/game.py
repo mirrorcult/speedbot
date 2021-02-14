@@ -64,11 +64,13 @@ class Game():
         self.abbreviation = game_data["abbreviation"]
         self.created_time = game_data["created"]
 
+        log.info(f"Successfully set game to {self.game_id} ({self.name}, {self.abbreviation})")
         self.populate_categories_and_levels()
 
     def populate_categories_and_levels(self):
         """Creates lists self.categories and self.levels containing CategoryLevel
         classes, which contain info about the categories/levels in the game."""
+        log.debug(f"Repopulating categories/levels for {self.game_id}")
         categories = self.api.get(f"games/{self.game_id}/categories")
         self.categories = []
         for c in categories:
@@ -89,7 +91,9 @@ class Game():
             names.append(c.name)
         for l in self.levels:
             names.append(l.name)
-        return process.extractOne(text, names)[0]
+        result = process.extractOne(text, names)
+        log.info(f"Matched '{text}' to '{result[0]}' with {result[1]}% confidence")
+        return result[0]
 
     def get_run_id(self, category, user):
         """Retrieves a run's ID in the given
